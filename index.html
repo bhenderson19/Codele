@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numeric Code Breaker Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin-top: 50px;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            font-size: 16px;
+            width: 200px;
+            margin-top: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        #feedback, #score {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #topScores {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Numeric Code Breaker Game</h1>
+    <p>Enter your name to start:</p>
+    <input type="text" id="playerName" placeholder="Your Name">
+    <p>Guess the 4-digit code!</p>
+    <input type="number" id="guessInput" maxlength="4" placeholder="Enter your guess" disabled>
+    <button onclick="makeGuess()" disabled>Submit Guess</button>
+    
+    <div id="feedback"></div>
+    <div id="score"></div>
+    <div id="topScores"></div>
+
+    <script>
+        const secretCode = generateCode(4);
+        let attempts = 0;
+        const maxAttempts = 10;
+        let score = 1000; // Starting score
+        let playerName = "";
+
+        document.getElementById('playerName').addEventListener('change', function() {
+            playerName = this.value.trim();
+            if (playerName) {
+                document.getElementById('guessInput').disabled = false;
+                document.querySelector('button').disabled = false;
+            }
+        });
+
+        function generateCode(length) {
+            let code = '';
+            for (let i = 0; i < length; i++) {
+                code += Math.floor(Math.random() * 10).toString();
+            }
+            return code;
+        }
+
+        function makeGuess() {
+            const guess = document.getElementById('guessInput').value;
+            if (guess.length !== 4 || isNaN(guess)) {
+                alert("Please enter a 4-digit numeric guess.");
+                return;
+            }
+            attempts += 1;
+            score -= 100; // Decrease score by 100 for each attempt
+
+            const feedback = getFeedback(guess, secretCode);
+            document.getElementById('feedback').innerHTML = feedback;
+            document.getElementById('score').innerHTML = `Score: ${score}`;
+
+            if (guess === secretCode) {
+                document.getElementById('feedback').innerHTML += `<br>Congratulations! You've guessed the code in ${attempts} attempts!`;
+                document.getElementById('score').innerHTML += `<br>Final Score: ${score}`;
+                saveScore(playerName, score);
+                displayTopScores();
+                disableInput();
+            } else if (attempts >= maxAttempts) {
+                document.getElementById('feedback').innerHTML += `<br>Sorry, you've used all ${maxAttempts} attempts. The correct code was ${secretCode}.`;
+                document.getElementById('score').innerHTML = `Final Score: 0`;
+                saveScore(playerName, 0);
+                displayTopScores();
+                disableInput();
+            }
+        }
+
+        function getFeedback(guess, secretCode) {
+            let correctPlace = 0;
+            let correctDigitWrongPlace = 0;
+
+            let guessCounts = new Array(10).fill(0);
+            let secretCounts = new Array(10).fill(0);
+
+            for (let i = 0; i < guess.length; i++) {
+                if (guess[i] === secretCode[i]) {
+                    correctPlace += 1;
+                } else {
+                    guessCounts[guess[i]] += 1;
+                    secretCounts[secretCode[i]] += 1;
+                }
+            }
+
+            for (let i = 0; i < 10; i++) {
+                correctDigitWrongPlace += Math.min(guessCounts[i], secretCounts[i]);
+            }
+
+            return `Digits correct and in the correct place: ${correctPlace}<br>Digits correct but in the wrong place: ${correctDigitWrongPlace}`;
+        }
+
+        function saveScore(name, score) {
+            const scores = JSON.parse(localStorage.getItem('scores')) || [];
+            scores.push({ name, score });
+            localStorage.setItem('scores', JSON.stringify(scores));
+        }
+
+        function displayTopScores() {
+            const scores = JSON.parse(localStorage.getItem('scores')) || [];
+            scores.sort((a, b) => b.score - a.score);
+            const topScores = scores.slice(0, 5);
+
+            let topScoresHtml = '<h3>Top 5 Scores</h3>';
+            topScores.forEach((entry, index) => {
+                topScoresHtml += `<p>${index + 1}. ${entry.name} - ${entry.score}</p>`;
+            });
+
+            document.getElementById('topScores').innerHTML = topScoresHtml;
+        }
+
+        function disableInput() {
+            document.getElementById('guessInput').disabled = true;
+            document.querySelector('button').disabled = true;
+        }
+
+        // Display top scores on page load
+        displayTopScores();
+    </script>
+</body>
+</html>
