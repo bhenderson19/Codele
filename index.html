@@ -38,6 +38,7 @@
     <p>Guess the 4-digit code!</p>
     <input type="number" id="guessInput" maxlength="4" placeholder="Enter your guess" disabled>
     <button onclick="makeGuess()" disabled>Submit Guess</button>
+    <button onclick="resetGame()">Reset Game</button>
     
     <div id="feedback"></div>
     <div id="score"></div>
@@ -45,20 +46,25 @@
     <div id="topScores"></div>
 
     <script>
-        const secretCode = generateCode(4);
+        let secretCode = '';
         let attempts = 0;
         const maxAttempts = 10;
         let score = 1000; // Starting score
-        let playerName = "";
+        let playerName = '';
         const previousGuesses = [];
 
-        document.getElementById('playerName').addEventListener('change', function() {
-            playerName = this.value.trim();
-            if (playerName) {
-                document.getElementById('guessInput').disabled = false;
-                document.querySelector('button').disabled = false;
-            }
-        });
+        // Initialize game
+        function startGame() {
+            secretCode = generateCode(4);
+            attempts = 0;
+            score = 1000;
+            previousGuesses.length = 0;
+            updatePreviousGuesses();
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('score').innerHTML = `Score: ${score}`;
+            document.getElementById('guessInput').disabled = false;
+            document.querySelector('button').disabled = false;
+        }
 
         function generateCode(length) {
             let code = '';
@@ -154,7 +160,18 @@
             document.querySelector('button').disabled = true;
         }
 
-        // Display top scores on page load
+        function resetGame() {
+            document.getElementById('playerName').value = '';
+            document.getElementById('guessInput').value = '';
+            document.getElementById('feedback').innerHTML = '';
+            document.getElementById('score').innerHTML = 'Score: 1000';
+            document.getElementById('previousGuesses').innerHTML = '';
+            startGame();
+            displayTopScores();
+        }
+
+        // Initialize the game when the page loads
+        startGame();
         displayTopScores();
     </script>
 </body>
