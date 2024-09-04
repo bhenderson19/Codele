@@ -16,12 +16,18 @@
             align-items: center;
             margin: 10px 0;
         }
+        .guess-label {
+            width: 100px;
+            text-align: right;
+            margin-right: 10px;
+            font-weight: bold;
+        }
         input[type="number"] {
             padding: 10px;
             font-size: 16px;
             width: 50px;
             text-align: center;
-            margin-right: 5px;
+            margin: 0 5px;
         }
         input[type="number"]:disabled {
             background-color: #e0e0e0;
@@ -36,7 +42,7 @@
             font-weight: bold;
         }
         .feedback {
-            margin-left: 10px;
+            margin-left: 20px;
             font-size: 16px;
             font-weight: bold;
         }
@@ -94,6 +100,11 @@
                 const rowDiv = document.createElement('div');
                 rowDiv.className = 'guess-row';
                 rowDiv.id = `row-${i}`;
+
+                const label = document.createElement('div');
+                label.className = 'guess-label';
+                label.innerText = `Guess ${i + 1}:`;
+                rowDiv.appendChild(label);
 
                 for (let j = 0; j < 3; j++) {
                     const input = document.createElement('input');
