@@ -10,30 +10,35 @@
             text-align: center;
             margin-top: 50px;
         }
-        input[type="text"], input[type="number"] {
+        .guess-row {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 10px 0;
+        }
+        input[type="number"] {
             padding: 10px;
             font-size: 16px;
             width: 50px;
             text-align: center;
+            margin-right: 5px;
+        }
+        input[type="number"]:disabled {
+            background-color: #e0e0e0;
         }
         button {
             padding: 10px 20px;
             font-size: 16px;
-            margin-top: 10px;
+            margin-top: 20px;
         }
         #feedback, #score, #previousGuesses, #topScores {
             margin-top: 20px;
             font-weight: bold;
         }
-        .guessEntry {
-            margin: 5px 0;
+        .feedback {
+            margin-left: 10px;
             font-size: 16px;
-        }
-        .digit-inputs {
-            display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin-top: 10px;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -41,40 +46,36 @@
     <h1>Numeric Code Breaker Game</h1>
     <p>Enter your name to start:</p>
     <input type="text" id="playerName" placeholder="Your Name">
-    <p>Guess the 4-digit code!</p>
-    <div class="digit-inputs">
-        <input type="number" id="digit1" maxlength="1" min="0" max="9" disabled>
-        <input type="number" id="digit2" maxlength="1" min="0" max="9" disabled>
-        <input type="number" id="digit3" maxlength="1" min="0" max="9" disabled>
-        <input type="number" id="digit4" maxlength="1" min="0" max="9" disabled>
+    
+    <div id="guesses">
+        <!-- Rows for guesses will be dynamically created here -->
     </div>
-    <button onclick="makeGuess()" disabled>Submit Guess</button>
+
+    <button onclick="makeGuess()">Submit Guess</button>
     <button onclick="resetGame()">Reset Game</button>
     
     <div id="feedback"></div>
     <div id="score"></div>
-    <div id="previousGuesses"></div>
     <div id="topScores"></div>
 
     <script>
+        const numberOfRows = 10;
         let secretCode = '';
         let attempts = 0;
-        const maxAttempts = 10;
+        const maxAttempts = numberOfRows;
         let score = 1000; // Starting score
         let playerName = '';
-        const previousGuesses = [];
+        let currentRow = 0;
 
-        // Initialize game
         function startGame() {
-            secretCode = generateCode(4);
+            secretCode = generateCode(3);
             attempts = 0;
             score = 1000;
-            previousGuesses.length = 0;
-            updatePreviousGuesses();
+            currentRow = 0;
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = `Score: ${score}`;
-            document.querySelectorAll('.digit-inputs input').forEach(input => input.disabled = false);
-            document.querySelector('button').disabled = false;
+            generateRows();
+            displayTopScores();
         }
 
         function generateCode(length) {
@@ -85,41 +86,76 @@
             return code;
         }
 
-        function makeGuess() {
-            const guess = [
-                document.getElementById('digit1').value,
-                document.getElementById('digit2').value,
-                document.getElementById('digit3').value,
-                document.getElementById('digit4').value
-            ].join('');
+        function generateRows() {
+            const guessesDiv = document.getElementById('guesses');
+            guessesDiv.innerHTML = '';
 
-            if (guess.length !== 4 || isNaN(guess)) {
-                alert("Please enter a 4-digit numeric guess.");
+            for (let i = 0; i < numberOfRows; i++) {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'guess-row';
+                rowDiv.id = `row-${i}`;
+
+                for (let j = 0; j < 3; j++) {
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.maxLength = 1;
+                    input.min = 0;
+                    input.max = 9;
+                    input.disabled = true;
+                    input.id = `row-${i}-digit-${j}`;
+                    rowDiv.appendChild(input);
+                }
+
+                const feedbackDiv = document.createElement('div');
+                feedbackDiv.className = 'feedback';
+                feedbackDiv.id = `row-${i}-feedback`;
+                rowDiv.appendChild(feedbackDiv);
+
+                guessesDiv.appendChild(rowDiv);
+            }
+
+            enableCurrentRow();
+        }
+
+        function enableCurrentRow() {
+            const row = document.getElementById(`row-${currentRow}`);
+            row.querySelectorAll('input').forEach(input => input.disabled = false);
+        }
+
+        function makeGuess() {
+            const guess = [];
+            for (let j = 0; j < 3; j++) {
+                const input = document.getElementById(`row-${currentRow}-digit-${j}`);
+                guess.push(input.value);
+            }
+
+            if (guess.some(val => val === '') || guess.length !== 3) {
+                alert("Please enter a complete 3-digit numeric guess.");
                 return;
             }
 
             attempts += 1;
             score -= 100; // Decrease score by 100 for each attempt
 
-            const feedback = getFeedback(guess, secretCode);
-            previousGuesses.push({ guess, feedback });
-            updatePreviousGuesses();
+            const feedback = getFeedback(guess.join(''), secretCode);
+            document.getElementById(`row-${currentRow}-feedback`).innerHTML = feedback;
 
-            document.getElementById('feedback').innerHTML = feedback;
-            document.getElementById('score').innerHTML = `Score: ${score}`;
-
-            if (guess === secretCode) {
-                document.getElementById('feedback').innerHTML += `<br>Congratulations! You've guessed the code in ${attempts} attempts!`;
-                document.getElementById('score').innerHTML += `<br>Final Score: ${score}`;
+            if (guess.join('') === secretCode) {
+                document.getElementById('feedback').innerHTML = `Congratulations! You've guessed the code in ${attempts} attempts!`;
+                document.getElementById('score').innerHTML = `Final Score: ${score}`;
                 saveScore(playerName, score);
                 displayTopScores();
                 disableInput();
             } else if (attempts >= maxAttempts) {
-                document.getElementById('feedback').innerHTML += `<br>Sorry, you've used all ${maxAttempts} attempts. The correct code was ${secretCode}.`;
+                document.getElementById('feedback').innerHTML = `Sorry, you've used all ${maxAttempts} attempts. The correct code was ${secretCode}.`;
                 document.getElementById('score').innerHTML = `Final Score: 0`;
                 saveScore(playerName, 0);
                 displayTopScores();
                 disableInput();
+            } else {
+                disableRow(currentRow);
+                currentRow += 1;
+                enableCurrentRow();
             }
         }
 
@@ -143,7 +179,7 @@
                 correctDigitWrongPlace += Math.min(guessCounts[i], secretCounts[i]);
             }
 
-            return `Digits correct and in the correct place: ${correctPlace}<br>Digits correct but in the wrong place: ${correctDigitWrongPlace}`;
+            return `Correct place: ${correctPlace}, Wrong place: ${correctDigitWrongPlace}`;
         }
 
         function saveScore(name, score) {
@@ -165,35 +201,28 @@
             document.getElementById('topScores').innerHTML = topScoresHtml;
         }
 
-        function updatePreviousGuesses() {
-            let previousGuessesHtml = '<h3>Previous Guesses</h3>';
-            previousGuesses.forEach((entry, index) => {
-                previousGuessesHtml += `<div class="guessEntry">Guess ${index + 1}: ${entry.guess} - ${entry.feedback}</div>`;
-            });
-            document.getElementById('previousGuesses').innerHTML = previousGuessesHtml;
+        function disableRow(rowIndex) {
+            const row = document.getElementById(`row-${rowIndex}`);
+            row.querySelectorAll('input').forEach(input => input.disabled = true);
         }
 
         function disableInput() {
-            document.querySelectorAll('.digit-inputs input').forEach(input => input.disabled = true);
+            for (let i = 0; i < numberOfRows; i++) {
+                disableRow(i);
+            }
             document.querySelector('button').disabled = true;
         }
 
         function resetGame() {
             document.getElementById('playerName').value = '';
-            document.getElementById('digit1').value = '';
-            document.getElementById('digit2').value = '';
-            document.getElementById('digit3').value = '';
-            document.getElementById('digit4').value = '';
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = 'Score: 1000';
-            document.getElementById('previousGuesses').innerHTML = '';
             startGame();
             displayTopScores();
         }
 
         // Initialize the game when the page loads
         startGame();
-        displayTopScores();
     </script>
 </body>
 </html>
