@@ -21,13 +21,13 @@
             font-size: 16px;
             margin-top: 10px;
         }
-        #feedback, #score {
+        #feedback, #score, #previousGuesses, #topScores {
             margin-top: 20px;
             font-weight: bold;
         }
-        #topScores {
-            margin-top: 20px;
-            font-weight: bold;
+        .guessEntry {
+            margin: 5px 0;
+            font-size: 16px;
         }
     </style>
 </head>
@@ -41,6 +41,7 @@
     
     <div id="feedback"></div>
     <div id="score"></div>
+    <div id="previousGuesses"></div>
     <div id="topScores"></div>
 
     <script>
@@ -49,6 +50,7 @@
         const maxAttempts = 10;
         let score = 1000; // Starting score
         let playerName = "";
+        const previousGuesses = [];
 
         document.getElementById('playerName').addEventListener('change', function() {
             playerName = this.value.trim();
@@ -76,6 +78,9 @@
             score -= 100; // Decrease score by 100 for each attempt
 
             const feedback = getFeedback(guess, secretCode);
+            previousGuesses.push({ guess, feedback });
+            updatePreviousGuesses();
+
             document.getElementById('feedback').innerHTML = feedback;
             document.getElementById('score').innerHTML = `Score: ${score}`;
 
@@ -134,6 +139,14 @@
             });
 
             document.getElementById('topScores').innerHTML = topScoresHtml;
+        }
+
+        function updatePreviousGuesses() {
+            let previousGuessesHtml = '<h3>Previous Guesses</h3>';
+            previousGuesses.forEach((entry, index) => {
+                previousGuessesHtml += `<div class="guessEntry">Guess ${index + 1}: ${entry.guess} - ${entry.feedback}</div>`;
+            });
+            document.getElementById('previousGuesses').innerHTML = previousGuessesHtml;
         }
 
         function disableInput() {
