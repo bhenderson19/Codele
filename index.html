@@ -13,8 +13,8 @@
         input[type="text"], input[type="number"] {
             padding: 10px;
             font-size: 16px;
-            width: 200px;
-            margin-top: 10px;
+            width: 50px;
+            text-align: center;
         }
         button {
             padding: 10px 20px;
@@ -29,6 +29,12 @@
             margin: 5px 0;
             font-size: 16px;
         }
+        .digit-inputs {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
@@ -36,7 +42,12 @@
     <p>Enter your name to start:</p>
     <input type="text" id="playerName" placeholder="Your Name">
     <p>Guess the 4-digit code!</p>
-    <input type="number" id="guessInput" maxlength="4" placeholder="Enter your guess" disabled>
+    <div class="digit-inputs">
+        <input type="number" id="digit1" maxlength="1" min="0" max="9" disabled>
+        <input type="number" id="digit2" maxlength="1" min="0" max="9" disabled>
+        <input type="number" id="digit3" maxlength="1" min="0" max="9" disabled>
+        <input type="number" id="digit4" maxlength="1" min="0" max="9" disabled>
+    </div>
     <button onclick="makeGuess()" disabled>Submit Guess</button>
     <button onclick="resetGame()">Reset Game</button>
     
@@ -62,7 +73,7 @@
             updatePreviousGuesses();
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = `Score: ${score}`;
-            document.getElementById('guessInput').disabled = false;
+            document.querySelectorAll('.digit-inputs input').forEach(input => input.disabled = false);
             document.querySelector('button').disabled = false;
         }
 
@@ -75,11 +86,18 @@
         }
 
         function makeGuess() {
-            const guess = document.getElementById('guessInput').value;
+            const guess = [
+                document.getElementById('digit1').value,
+                document.getElementById('digit2').value,
+                document.getElementById('digit3').value,
+                document.getElementById('digit4').value
+            ].join('');
+
             if (guess.length !== 4 || isNaN(guess)) {
                 alert("Please enter a 4-digit numeric guess.");
                 return;
             }
+
             attempts += 1;
             score -= 100; // Decrease score by 100 for each attempt
 
@@ -156,13 +174,16 @@
         }
 
         function disableInput() {
-            document.getElementById('guessInput').disabled = true;
+            document.querySelectorAll('.digit-inputs input').forEach(input => input.disabled = true);
             document.querySelector('button').disabled = true;
         }
 
         function resetGame() {
             document.getElementById('playerName').value = '';
-            document.getElementById('guessInput').value = '';
+            document.getElementById('digit1').value = '';
+            document.getElementById('digit2').value = '';
+            document.getElementById('digit3').value = '';
+            document.getElementById('digit4').value = '';
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = 'Score: 1000';
             document.getElementById('previousGuesses').innerHTML = '';
