@@ -176,12 +176,14 @@
         let correctCode = generateRandomCode();
         let score = maxScore;
         let topScores = [];
+        let guesses = [];
 
         function startGame() {
             currentRow = 0;
             currentInputIndex = 0;
             score = maxScore;
             document.getElementById('guesses').innerHTML = ''; // Clear previous guesses
+            guesses = []; // Reset the guesses array
             for (let i = 0; i < numberOfRows; i++) {
                 createGuessRow(i);
             }
@@ -194,7 +196,7 @@
 
         function createGuessRow(rowIndex) {
             const rowDiv = document.createElement('div');
-            rowDiv.classList.add('guess-row', 'hidden');
+            rowDiv.classList.add('guess-row');
             rowDiv.id = `row-${rowIndex}`;
 
             const label = document.createElement('span');
@@ -234,6 +236,7 @@
             const guess = getCurrentGuess();
             const feedback = getFeedback(guess);
             displayFeedback(feedback);
+            guesses.push({ guess: guess, feedback: feedback });
             currentRow++;
 
             if (currentRow < numberOfRows) {
@@ -244,6 +247,7 @@
             }
 
             updateScore(feedback);
+            displayPreviousGuesses(); // Display previous guesses
         }
 
         function getCurrentGuess() {
@@ -278,10 +282,25 @@
         }
 
         function updateScore(feedback) {
-            if (feedback.correctInPlace !== 3) {
+            if (feedback.correctInPlace === 3) {
+                score = Math.max(0, score - (numberOfRows - currentRow) * 100); // Adjust score based on row
+            } else {
                 score -= 100;
-                document.getElementById('score').textContent = `Score: ${score}`;
             }
+            document.getElementById('score').textContent = `Score: ${score}`;
+        }
+
+        function displayPreviousGuesses() {
+            guesses.forEach((entry, index) => {
+                const row = document.getElementById(`row-${index}`);
+                if (row) {
+                    const guessDigits = entry.guess.toString().split('');
+                    guessDigits.forEach((digit, i) => {
+                        document.getElementById(`row-${index}-digit-${i}`).value = digit;
+                    });
+                    displayFeedback(entry.feedback);
+                }
+            });
         }
 
         function recordScore(guess) {
