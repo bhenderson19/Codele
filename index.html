@@ -3,26 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Numeric Code Breaker Game</title>
+    <title>3-Digit Guessing Game</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding-bottom: 200px;
+            padding-bottom: 200px; /* Added padding to ensure scrolling past the keypad */
+            overflow-y: scroll; /* Enable vertical scrolling */
         }
+
         .guess-row {
             display: flex;
             justify-content: center;
             align-items: center;
             margin: 10px 0;
         }
+
         .guess-label {
             width: 100px;
             text-align: right;
             margin-right: 10px;
             font-weight: bold;
         }
+
         input[type="number"] {
             padding: 10px;
             font-size: 16px;
@@ -31,23 +35,28 @@
             margin: 0 5px;
             pointer-events: none;
         }
+
         input[type="number"]:disabled {
             background-color: #e0e0e0;
         }
+
         button {
             padding: 10px 20px;
             font-size: 16px;
             margin-top: 20px;
         }
+
         #feedback, #score {
             margin-top: 20px;
             font-weight: bold;
         }
+
         .feedback {
             margin-left: 20px;
             font-size: 16px;
             font-weight: bold;
         }
+
         .keypad {
             position: fixed;
             bottom: 0;
@@ -57,205 +66,184 @@
             padding: 20px 0;
             display: flex;
             justify-content: center;
+            z-index: 10; /* Ensure keypad stays on top */
         }
+
         .keypad-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-gap: 10px;
             max-width: 300px;
         }
+
         .keypad-grid button {
             width: 60px;
             height: 60px;
             font-size: 24px;
         }
+
         .keypad-grid button:nth-child(10) {
             grid-column: 1;
         }
+
         .keypad-grid button:nth-child(12) {
             grid-column: 3;
         }
+
         .hidden {
             display: none;
         }
+
         .nav-link {
             margin-top: 20px;
             font-size: 18px;
         }
+
         #resetButton {
             margin-top: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>Numeric Code Breaker Game</h1>
-
-    <a href="top-scores.html" class="nav-link">Top Scores</a>
-
+    <h1>3-Digit Guessing Game</h1>
     <div id="guesses">
-        <!-- Rows for guesses will be dynamically created here -->
+        <!-- Guess rows will be generated here dynamically -->
     </div>
-
     <div id="feedback"></div>
-    <div id="score"></div>
-
-    <!-- Reset Game Button -->
+    <div id="score">Score: 800</div>
     <button id="resetButton" onclick="resetGame()">Reset Game</button>
 
     <div class="keypad">
         <div class="keypad-grid">
-            <button onclick="inputDigit(1)">1</button>
-            <button onclick="inputDigit(2)">2</button>
-            <button onclick="inputDigit(3)">3</button>
-            <button onclick="inputDigit(4)">4</button>
-            <button onclick="inputDigit(5)">5</button>
-            <button onclick="inputDigit(6)">6</button>
-            <button onclick="inputDigit(7)">7</button>
-            <button onclick="inputDigit(8)">8</button>
-            <button onclick="inputDigit(9)">9</button>
+            <button onclick="handleKeypadClick(1)">1</button>
+            <button onclick="handleKeypadClick(2)">2</button>
+            <button onclick="handleKeypadClick(3)">3</button>
+            <button onclick="handleKeypadClick(4)">4</button>
+            <button onclick="handleKeypadClick(5)">5</button>
+            <button onclick="handleKeypadClick(6)">6</button>
+            <button onclick="handleKeypadClick(7)">7</button>
+            <button onclick="handleKeypadClick(8)">8</button>
+            <button onclick="handleKeypadClick(9)">9</button>
+            <button onclick="handleKeypadClick(0)">0</button>
             <button onclick="backspace()">&#9003;</button>
-            <button onclick="inputDigit(0)">0</button>
-            <button id="submitButton" onclick="makeGuess()">&#10003;</button>
+            <button id="submitButton" onclick="submitGuess()">&#10003;</button>
         </div>
     </div>
 
     <script>
-        const numberOfRows = 8;  // Changed number of rows to 8
-        let secretCode = '';
-        let attempts = 0;
-        const maxAttempts = numberOfRows;
-        let score = 800;  // Set max score to 800
+        const numberOfRows = 8;
         let currentRow = 0;
         let currentInputIndex = 0;
-        let finalGuess = '';  // To store the final guessed code
+        const maxScore = 800;
+        const correctCode = generateRandomCode();
+        let score = maxScore;
 
         function startGame() {
-            secretCode = generateCode(3);
-            attempts = 0;
-            score = 800;
             currentRow = 0;
             currentInputIndex = 0;
-            finalGuess = '';
-            document.getElementById('feedback').innerHTML = '';
-            document.getElementById('score').innerHTML = `Score: ${score}`;
-            document.getElementById('submitButton').disabled = false;
-            generateRows();
-        }
-
-        function generateCode(length) {
-            let code = '';
-            for (let i = 0; i < length; i++) {
-                code += Math.floor(Math.random() * 10).toString();
-            }
-            return code;
-        }
-
-        function generateRows() {
-            const guessesDiv = document.getElementById('guesses');
-            guessesDiv.innerHTML = '';
-
+            score = maxScore;
+            document.getElementById('guesses').innerHTML = ''; // Clear previous guesses
             for (let i = 0; i < numberOfRows; i++) {
-                const rowDiv = document.createElement('div');
-                rowDiv.className = 'guess-row hidden';
-                rowDiv.id = `row-${i}`;
+                createGuessRow(i);
+            }
+            showCurrentRow();
+        }
 
-                const label = document.createElement('div');
-                label.className = 'guess-label';
-                label.innerText = `Guess ${i + 1}:`;
-                rowDiv.appendChild(label);
+        function generateRandomCode() {
+            return Math.floor(Math.random() * 900) + 100; // Random 3-digit code
+        }
 
-                for (let j = 0; j < 3; j++) {
-                    const input = document.createElement('input');
-                    input.type = 'number';
-                    input.maxLength = 1;
-                    input.min = 0;
-                    input.max = 9;
-                    input.disabled = true;
-                    input.id = `row-${i}-digit-${j}`;
-                    rowDiv.appendChild(input);
-                }
+        function createGuessRow(rowIndex) {
+            const rowDiv = document.createElement('div');
+            rowDiv.classList.add('guess-row', 'hidden');
+            rowDiv.id = `row-${rowIndex}`;
 
-                const feedbackDiv = document.createElement('div');
-                feedbackDiv.className = 'feedback';
-                feedbackDiv.id = `row-${i}-feedback`;
-                rowDiv.appendChild(feedbackDiv);
+            const label = document.createElement('span');
+            label.classList.add('guess-label');
+            label.textContent = `Guess ${rowIndex + 1}`;
 
-                guessesDiv.appendChild(rowDiv);
+            rowDiv.appendChild(label);
+
+            for (let i = 0; i < 3; i++) {
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.id = `row-${rowIndex}-digit-${i}`;
+                input.disabled = true;
+                rowDiv.appendChild(input);
             }
 
-            showCurrentRow();
+            const feedbackSpan = document.createElement('span');
+            feedbackSpan.classList.add('feedback');
+            feedbackSpan.id = `feedback-${rowIndex}`;
+            rowDiv.appendChild(feedbackSpan);
+
+            document.getElementById('guesses').appendChild(rowDiv);
         }
 
         function showCurrentRow() {
             const row = document.getElementById(`row-${currentRow}`);
             row.classList.remove('hidden');
             row.querySelectorAll('input').forEach(input => input.disabled = false);
+
+            scrollToCurrentRow(); // Ensure proper scrolling
         }
 
-        function makeGuess() {
-            const guess = [];
-            for (let j = 0; j < 3; j++) {
-                const input = document.getElementById(`row-${currentRow}-digit-${j}`);
-                guess.push(input.value);
-            }
+        function submitGuess() {
+            const guess = getCurrentGuess();
+            const feedback = getFeedback(guess);
+            displayFeedback(feedback);
+            currentRow++;
 
-            if (guess.some(val => val === '') || guess.length !== 3) {
-                alert("Please enter a complete 3-digit numeric guess.");
-                return;
-            }
-
-            finalGuess = guess.join('');  // Save the final guessed code
-
-            attempts += 1;
-            score -= 100;
-
-            const feedback = getFeedback(guess.join(''), secretCode);
-            document.getElementById(`row-${currentRow}-feedback`).innerHTML = feedback;
-
-            if (finalGuess === secretCode) {
-                document.getElementById('feedback').innerHTML = `Congratulations! You've guessed the code in ${attempts} attempts!`;
-                document.getElementById('score').innerHTML = `Final Score: ${score}`;
-                saveScore(score, finalGuess);
-                displayTopScores();
-                disableInput();
-            } else if (attempts >= maxAttempts) {
-                document.getElementById('feedback').innerHTML = `Sorry, you've used all ${maxAttempts} attempts. The correct code was ${secretCode}.`;
-                document.getElementById('score').innerHTML = `Final Score: 0`;
-                saveScore(0, finalGuess);
-                displayTopScores();
-                disableInput();
-            } else {
-                disableRow(currentRow);
-                currentRow += 1;
-                currentInputIndex = 0;
+            if (currentRow < numberOfRows) {
                 showCurrentRow();
             }
+
+            if (guess === correctCode || currentRow === numberOfRows) {
+                disableInput(); // Disable further input if game is over
+            }
+
+            updateScore(feedback);
         }
 
-        function getFeedback(guess, secretCode) {
-            let correctPlace = 0;
-            let correctDigitWrongPlace = 0;
+        function getCurrentGuess() {
+            let guess = '';
+            for (let i = 0; i < 3; i++) {
+                guess += document.getElementById(`row-${currentRow}-digit-${i}`).value;
+            }
+            return parseInt(guess, 10);
+        }
 
-            let guessCounts = new Array(10).fill(0);
-            let secretCounts = new Array(10).fill(0);
+        function getFeedback(guess) {
+            const correctDigits = correctCode.toString().split('');
+            const guessDigits = guess.toString().split('');
 
-            for (let i = 0; i < guess.length; i++) {
-                if (guess[i] === secretCode[i]) {
-                    correctPlace += 1;
-                } else {
-                    guessCounts[guess[i]] += 1;
-                    secretCounts[secretCode[i]] += 1;
+            let correctInPlace = 0;
+            let correctOutOfPlace = 0;
+
+            guessDigits.forEach((digit, index) => {
+                if (digit === correctDigits[index]) {
+                    correctInPlace++;
+                } else if (correctDigits.includes(digit)) {
+                    correctOutOfPlace++;
                 }
-            }
+            });
 
-            for (let i = 0; i < 10; i++) {
-                correctDigitWrongPlace += Math.min(guessCounts[i], secretCounts[i]);
-            }
-
-            return `Correct place: ${correctPlace}, Wrong place: ${correctDigitWrongPlace}`;
+            return { correctInPlace, correctOutOfPlace };
         }
 
-        function inputDigit(digit) {
+        function displayFeedback(feedback) {
+            const feedbackElement = document.getElementById(`feedback-${currentRow}`);
+            feedbackElement.textContent = `Correct in place: ${feedback.correctInPlace}, Correct out of place: ${feedback.correctOutOfPlace}`;
+        }
+
+        function updateScore(feedback) {
+            if (feedback.correctInPlace !== 3) {
+                score -= 100;
+                document.getElementById('score').textContent = `Score: ${score}`;
+            }
+        }
+
+        function handleKeypadClick(digit) {
             if (currentInputIndex < 3) {
                 const input = document.getElementById(`row-${currentRow}-digit-${currentInputIndex}`);
                 input.value = digit;
@@ -271,24 +259,10 @@
             }
         }
 
-        function saveScore(score, finalGuess) {
-            const scores = JSON.parse(localStorage.getItem('scores')) || [];
-            scores.push({ score, guess: finalGuess });
-            localStorage.setItem('scores', JSON.stringify(scores));
-        }
-
-        function displayTopScores() {
-            const scores = JSON.parse(localStorage.getItem('scores')) || [];
-            scores.sort((a, b) => b.score - a.score);
-            const topScores = scores.slice(0, 5);
-
-            const topScoresDiv = document.getElementById('topScores');
-            if (topScoresDiv) {
-                topScoresDiv.innerHTML = `<h3>Top 5 Scores:</h3>`;
-                topScores.forEach((s, index) => {
-                    const guessBoxClass = s.score > 0 ? 'lightgreen' : 'lightcoral';
-                    topScoresDiv.innerHTML += `<p>${index + 1}: ${s.score} <span style="background-color: ${guessBoxClass};">${s.guess}</span></p>`;
-                });
+        function scrollToCurrentRow() {
+            const currentRowElement = document.getElementById(`row-${currentRow}`);
+            if (currentRowElement) {
+                currentRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         }
 
@@ -308,9 +282,10 @@
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = 'Score: 800';  // Reset score to 800
             startGame();
+            window.scrollTo({ top: 0, behavior: 'smooth' });  // Ensure the page scrolls to the top after reset
         }
 
-        // Initialize the game when the page loads
+        // Start the game initially
         startGame();
     </script>
 </body>
