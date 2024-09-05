@@ -9,8 +9,8 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding-bottom: 200px; /* Added padding to ensure scrolling past the keypad */
-            overflow-y: scroll; /* Enable vertical scrolling */
+            padding-bottom: 200px; /* Ensure scrolling past keypad */
+            overflow-y: scroll;
         }
 
         .guess-row {
@@ -18,6 +18,7 @@
             justify-content: center;
             align-items: center;
             margin: 10px 0;
+            flex-wrap: nowrap;
         }
 
         .guess-label {
@@ -61,7 +62,7 @@
             padding: 20px 0;
             display: flex;
             justify-content: center;
-            z-index: 10; /* Ensure keypad stays on top */
+            z-index: 10;
         }
 
         .keypad-grid {
@@ -115,6 +116,11 @@
 
         .score-table th {
             background-color: #f0f0f0;
+        }
+
+        .disabled-row {
+            background-color: #e0e0e0;
+            pointer-events: none; /* Prevent interaction */
         }
     </style>
 </head>
@@ -239,15 +245,14 @@
             guesses.push({ guess: guess, feedback: feedback });
             currentRow++;
 
-            updateScore(feedback);
-
             if (currentRow < numberOfRows) {
                 showCurrentRow();
             } else {
                 disableInput(); // Disable further input if game is over
-                recordScore(correctCode); // Record the score
+                recordScore(guess); // Record the score
             }
 
+            updateScore(feedback);
             displayPreviousGuesses(); // Display previous guesses
         }
 
@@ -279,7 +284,7 @@
 
         function displayFeedback(feedback) {
             const feedbackElement = document.getElementById(`feedback-${currentRow}`);
-            feedbackElement.textContent = `Correct in place: ${feedback.correctInPlace}, Correct out of place: ${feedback.correctOutOfPlace}`;
+            feedbackElement.textContent = `Correct in place: ${feedback.correctInPlace}, Correct but in wrong place: ${feedback.correctOutOfPlace}`;
         }
 
         function updateScore(feedback) {
