@@ -8,7 +8,8 @@
         body {
             font-family: Arial, sans-serif;
             text-align: center;
-            margin-top: 50px;
+            margin: 0;
+            padding-bottom: 200px; /* To prevent content being covered by keypad */
         }
         .guess-row {
             display: flex;
@@ -38,19 +39,6 @@
             font-size: 16px;
             margin-top: 20px;
         }
-        .keypad {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            max-width: 200px;
-            margin: 20px auto;
-        }
-        .keypad button {
-            width: 60px;
-            height: 60px;
-            font-size: 24px;
-            margin: 5px;
-        }
         #feedback, #score, #previousGuesses, #topScores {
             margin-top: 20px;
             font-weight: bold;
@@ -59,6 +47,33 @@
             margin-left: 20px;
             font-size: 16px;
             font-weight: bold;
+        }
+        .keypad {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: #f0f0f0;
+            padding: 20px 0;
+            display: flex;
+            justify-content: center;
+        }
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-gap: 10px;
+            max-width: 300px;
+        }
+        .keypad-grid button {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+        }
+        .keypad-grid button:nth-child(10) {
+            grid-column: 1; /* Position the backspace button */
+        }
+        .keypad-grid button:nth-child(12) {
+            grid-column: 3; /* Position the submit button */
         }
     </style>
 </head>
@@ -69,26 +84,26 @@
         <!-- Rows for guesses will be dynamically created here -->
     </div>
 
-    <button onclick="makeGuess()">Submit Guess</button>
-    <button onclick="resetGame()">Reset Game</button>
-
-    <div class="keypad">
-        <button onclick="inputDigit(1)">1</button>
-        <button onclick="inputDigit(2)">2</button>
-        <button onclick="inputDigit(3)">3</button>
-        <button onclick="inputDigit(4)">4</button>
-        <button onclick="inputDigit(5)">5</button>
-        <button onclick="inputDigit(6)">6</button>
-        <button onclick="inputDigit(7)">7</button>
-        <button onclick="inputDigit(8)">8</button>
-        <button onclick="inputDigit(9)">9</button>
-        <button onclick="backspace()">&#9003;</button>
-        <button onclick="inputDigit(0)">0</button>
-    </div>
-    
     <div id="feedback"></div>
     <div id="score"></div>
     <div id="topScores"></div>
+
+    <div class="keypad">
+        <div class="keypad-grid">
+            <button onclick="inputDigit(1)">1</button>
+            <button onclick="inputDigit(2)">2</button>
+            <button onclick="inputDigit(3)">3</button>
+            <button onclick="inputDigit(4)">4</button>
+            <button onclick="inputDigit(5)">5</button>
+            <button onclick="inputDigit(6)">6</button>
+            <button onclick="inputDigit(7)">7</button>
+            <button onclick="inputDigit(8)">8</button>
+            <button onclick="inputDigit(9)">9</button>
+            <button onclick="backspace()">&#9003;</button> <!-- Backspace on left side -->
+            <button onclick="inputDigit(0)">0</button>
+            <button onclick="makeGuess()">Submit</button> <!-- Submit button on right side -->
+        </div>
+    </div>
 
     <script>
         const numberOfRows = 10;
@@ -248,12 +263,11 @@
             scores.sort((a, b) => b.score - a.score);
             const topScores = scores.slice(0, 5);
 
-            let topScoresHtml = '<h3>Top 5 Scores</h3>';
-            topScores.forEach((entry, index) => {
-                topScoresHtml += `<p>${index + 1}. Score: ${entry.score}</p>`;
+            const topScoresDiv = document.getElementById('topScores');
+            topScoresDiv.innerHTML = `<h3>Top 5 Scores:</h3>`;
+            topScores.forEach((s, index) => {
+                topScoresDiv.innerHTML += `<p>${index + 1}: ${s.score}</p>`;
             });
-
-            document.getElementById('topScores').innerHTML = topScoresHtml;
         }
 
         function disableRow(rowIndex) {
