@@ -33,11 +33,6 @@
             width: 50px;
             text-align: center;
             margin: 0 5px;
-            pointer-events: none;
-        }
-
-        input[type="number"]:disabled {
-            background-color: #e0e0e0;
         }
 
         button {
@@ -225,14 +220,17 @@
         }
 
         function showCurrentRow() {
+            document.querySelectorAll('.guess-row').forEach(row => row.classList.add('hidden'));
             const row = document.getElementById(`row-${currentRow}`);
             row.classList.remove('hidden');
             row.querySelectorAll('input').forEach(input => input.disabled = false);
-
+            currentInputIndex = 0; // Reset input index for the current row
             scrollToCurrentRow(); // Ensure proper scrolling
         }
 
         function submitGuess() {
+            if (currentInputIndex < 3) return; // Prevent submission if not all digits are entered
+
             const guess = getCurrentGuess();
             const feedback = getFeedback(guess);
             displayFeedback(feedback);
@@ -240,9 +238,7 @@
 
             if (currentRow < numberOfRows) {
                 showCurrentRow();
-            }
-
-            if (guess === correctCode || currentRow === numberOfRows) {
+            } else {
                 disableInput(); // Disable further input if game is over
                 recordScore(guess); // Record the score
             }
