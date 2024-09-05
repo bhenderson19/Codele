@@ -122,6 +122,11 @@
             background-color: #e0e0e0;
             pointer-events: none; /* Prevent interaction */
         }
+
+        input:disabled {
+            background-color: #e0e0e0;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -190,10 +195,7 @@
             score = maxScore;
             document.getElementById('guesses').innerHTML = ''; // Clear previous guesses
             guesses = []; // Reset the guesses array
-            for (let i = 0; i < numberOfRows; i++) {
-                createGuessRow(i);
-            }
-            showCurrentRow();
+            createGuessRow(currentRow); // Create the first row
         }
 
         function generateRandomCode() {
@@ -215,7 +217,6 @@
                 const input = document.createElement('input');
                 input.type = 'number';
                 input.id = `row-${rowIndex}-digit-${i}`;
-                input.disabled = true;
                 rowDiv.appendChild(input);
             }
 
@@ -227,13 +228,17 @@
             document.getElementById('guesses').appendChild(rowDiv);
         }
 
-        function showCurrentRow() {
-            document.querySelectorAll('.guess-row').forEach(row => row.classList.add('hidden'));
-            const row = document.getElementById(`row-${currentRow}`);
-            row.classList.remove('hidden');
-            row.querySelectorAll('input').forEach(input => input.disabled = false);
-            currentInputIndex = 0; // Reset input index for the current row
-            scrollToCurrentRow(); // Ensure proper scrolling
+        function showNextRow() {
+            currentRow++;
+            if (currentRow < numberOfRows) {
+                createGuessRow(currentRow); // Create and show the next row
+                disablePreviousRow(); // Grey out the previous row
+            }
+        }
+
+        function disablePreviousRow() {
+            const row = document.getElementById(`row-${currentRow - 1}`);
+            row.querySelectorAll('input').forEach(input => input.disabled = true);
         }
 
         function submitGuess() {
@@ -243,18 +248,14 @@
             const feedback = getFeedback(guess);
             displayFeedback(feedback);
             guesses.push({ guess: guess, feedback: feedback });
-            currentRow++;
+            showNextRow();
 
             updateScore(feedback);
 
-            if (currentRow < numberOfRows) {
-                showCurrentRow();
-            } else {
+            if (currentRow >= numberOfRows) {
                 disableInput(); // Disable further input if game is over
                 recordScore(); // Record the score
             }
-
-            displayPreviousGuesses(); // Display previous guesses
         }
 
         function getCurrentGuess() {
@@ -285,7 +286,7 @@
 
         function displayFeedback(feedback) {
             const feedbackElement = document.getElementById(`feedback-${currentRow}`);
-            feedbackElement.textContent = `Correct in place: ${feedback.correctInPlace}, Correct but in wrong place: ${feedback.correctOutOfPlace}`;
+            feedbackElement.textContent = `Correct in place: ${feedback.correctInPlace}, Correct but wrong place: ${feedback.correctOutOfPlace}`;
         }
 
         function updateScore(feedback) {
@@ -295,19 +296,6 @@
                 score -= 100;
             }
             document.getElementById('score').textContent = `Score: ${score}`;
-        }
-
-        function displayPreviousGuesses() {
-            guesses.forEach((entry, index) => {
-                const row = document.getElementById(`row-${index}`);
-                if (row) {
-                    const guessDigits = entry.guess.toString().split('');
-                    guessDigits.forEach((digit, i) => {
-                        document.getElementById(`row-${index}-digit-${i}`).value = digit;
-                    });
-                    displayFeedback(entry.feedback);
-                }
-            });
         }
 
         function recordScore() {
@@ -359,21 +347,9 @@
             }
         }
 
-        function scrollToCurrentRow() {
-            const currentRowElement = document.getElementById(`row-${currentRow}`);
-            if (currentRowElement) {
-                currentRowElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }
-        }
-
-        function disableRow(rowIndex) {
-            const row = document.getElementById(`row-${rowIndex}`);
-            row.querySelectorAll('input').forEach(input => input.disabled = true);
-        }
-
         function disableInput() {
             for (let i = 0; i < numberOfRows; i++) {
-                disableRow(i);
+                disablePreviousRow();
             }
             document.getElementById('submitButton').disabled = true;
         }
@@ -382,7 +358,6 @@
             correctCode = generateRandomCode();
             startGame();
             document.getElementById('submitButton').disabled = false;
-            window.scroll({ top: 0, behavior: 'smooth' });
         }
 
         function showPage(pageId) {
@@ -395,7 +370,6 @@
             }
         }
 
-        // Keyboard event listener
         document.addEventListener('keydown', function(event) {
             if (event.key >= '0' && event.key <= '9') {
                 handleKeypadClick(parseInt(event.key));
@@ -404,10 +378,8 @@
             } else if (event.key === 'Enter') {
                 submitGuess();
             }
-            event.preventDefault(); // Prevent any other default action
         });
 
-        // Load saved scores and start the game
         loadScores();
         startGame();
     </script>
