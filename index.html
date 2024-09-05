@@ -28,6 +28,7 @@
             width: 50px;
             text-align: center;
             margin: 0 5px;
+            pointer-events: none; /* Prevent direct typing */
         }
         input[type="number"]:disabled {
             background-color: #e0e0e0;
@@ -36,6 +37,19 @@
             padding: 10px 20px;
             font-size: 16px;
             margin-top: 20px;
+        }
+        .keypad {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 200px;
+            margin: 20px auto;
+        }
+        .keypad button {
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            margin: 5px;
         }
         #feedback, #score, #previousGuesses, #topScores {
             margin-top: 20px;
@@ -50,8 +64,6 @@
 </head>
 <body>
     <h1>Numeric Code Breaker Game</h1>
-    <p>Enter your name to start:</p>
-    <input type="text" id="playerName" placeholder="Your Name">
     
     <div id="guesses">
         <!-- Rows for guesses will be dynamically created here -->
@@ -59,6 +71,20 @@
 
     <button onclick="makeGuess()">Submit Guess</button>
     <button onclick="resetGame()">Reset Game</button>
+
+    <div class="keypad">
+        <button onclick="inputDigit(1)">1</button>
+        <button onclick="inputDigit(2)">2</button>
+        <button onclick="inputDigit(3)">3</button>
+        <button onclick="inputDigit(4)">4</button>
+        <button onclick="inputDigit(5)">5</button>
+        <button onclick="inputDigit(6)">6</button>
+        <button onclick="inputDigit(7)">7</button>
+        <button onclick="inputDigit(8)">8</button>
+        <button onclick="inputDigit(9)">9</button>
+        <button onclick="backspace()">&#9003;</button>
+        <button onclick="inputDigit(0)">0</button>
+    </div>
     
     <div id="feedback"></div>
     <div id="score"></div>
@@ -70,14 +96,15 @@
         let attempts = 0;
         const maxAttempts = numberOfRows;
         let score = 1000; // Starting score
-        let playerName = '';
         let currentRow = 0;
+        let currentInputIndex = 0;
 
         function startGame() {
             secretCode = generateCode(3);
             attempts = 0;
             score = 1000;
             currentRow = 0;
+            currentInputIndex = 0;
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = `Score: ${score}`;
             generateRows();
@@ -154,18 +181,19 @@
             if (guess.join('') === secretCode) {
                 document.getElementById('feedback').innerHTML = `Congratulations! You've guessed the code in ${attempts} attempts!`;
                 document.getElementById('score').innerHTML = `Final Score: ${score}`;
-                saveScore(playerName, score);
+                saveScore(score);
                 displayTopScores();
                 disableInput();
             } else if (attempts >= maxAttempts) {
                 document.getElementById('feedback').innerHTML = `Sorry, you've used all ${maxAttempts} attempts. The correct code was ${secretCode}.`;
                 document.getElementById('score').innerHTML = `Final Score: 0`;
-                saveScore(playerName, 0);
+                saveScore(0);
                 displayTopScores();
                 disableInput();
             } else {
                 disableRow(currentRow);
                 currentRow += 1;
+                currentInputIndex = 0;
                 enableCurrentRow();
             }
         }
@@ -193,9 +221,25 @@
             return `Correct place: ${correctPlace}, Wrong place: ${correctDigitWrongPlace}`;
         }
 
-        function saveScore(name, score) {
+        function inputDigit(digit) {
+            if (currentInputIndex < 3) {
+                const input = document.getElementById(`row-${currentRow}-digit-${currentInputIndex}`);
+                input.value = digit;
+                currentInputIndex += 1;
+            }
+        }
+
+        function backspace() {
+            if (currentInputIndex > 0) {
+                currentInputIndex -= 1;
+                const input = document.getElementById(`row-${currentRow}-digit-${currentInputIndex}`);
+                input.value = '';
+            }
+        }
+
+        function saveScore(score) {
             const scores = JSON.parse(localStorage.getItem('scores')) || [];
-            scores.push({ name, score });
+            scores.push({ score });
             localStorage.setItem('scores', JSON.stringify(scores));
         }
 
@@ -206,7 +250,7 @@
 
             let topScoresHtml = '<h3>Top 5 Scores</h3>';
             topScores.forEach((entry, index) => {
-                topScoresHtml += `<p>${index + 1}. ${entry.name} - ${entry.score}</p>`;
+                topScoresHtml += `<p>${index + 1}. Score: ${entry.score}</p>`;
             });
 
             document.getElementById('topScores').innerHTML = topScoresHtml;
@@ -225,7 +269,6 @@
         }
 
         function resetGame() {
-            document.getElementById('playerName').value = '';
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = 'Score: 1000';
             startGame();
