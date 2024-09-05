@@ -162,30 +162,22 @@
         <button onclick="showPage('game')">Back to Game</button>
     </div>
     
-    <div id="keypad-container" class="keypad">
-        <!-- Keypad layout -->
-        <div class="keypad-row">
+    <div class="keypad">
+        <div class="keypad-grid">
             <button onclick="handleKeypadClick(1)">1</button>
             <button onclick="handleKeypadClick(2)">2</button>
             <button onclick="handleKeypadClick(3)">3</button>
-        </div>
-        <div class="keypad-row">
             <button onclick="handleKeypadClick(4)">4</button>
             <button onclick="handleKeypadClick(5)">5</button>
             <button onclick="handleKeypadClick(6)">6</button>
-        </div>
-        <div class="keypad-row">
             <button onclick="handleKeypadClick(7)">7</button>
             <button onclick="handleKeypadClick(8)">8</button>
             <button onclick="handleKeypadClick(9)">9</button>
-        </div>
-        <div class="keypad-row">
-            <button onclick="backspace()">&#9003</button>
+            <button onclick="backspace()">&#9003;</button>
             <button onclick="handleKeypadClick(0)">0</button>
             <button id="submitButton" onclick="submitGuess()">&#10003;</button>
         </div>
     </div>
-    
 
     <script>
         const numberOfRows = 8;
@@ -369,22 +361,16 @@
         }
 
         function showPage(pageId) {
-            // Hide all pages
             document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
             document.getElementById(pageId).classList.remove('hidden');
-
-            // Show or hide the keypad based on the active page
             if (pageId === 'game') {
-                document.getElementById('keypad-container').style.display = 'flex'; // Show the keypad
+                document.getElementsByClassName('keypad').style.display = 'flex';
                 startGame();
-            } else {
-                document.getElementById('keypad-container').style.display = 'none'; // Hide the keypad on other pages
-                if (pageId === 'topScores') {
-                    updateTopScoresPage();
-                }
+            } else if (pageId === 'topScores') {
+                document.getElementsByClassName('keypad').style.display = 'none';
+                updateTopScoresPage();
             }
         }
-
 
         document.addEventListener('keydown', function(event) {
             if (event.key >= '0' && event.key <= '9') {
