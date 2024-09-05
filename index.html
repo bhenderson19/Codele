@@ -102,17 +102,60 @@
         #resetButton {
             margin-top: 20px;
         }
+
+        .score-table {
+            width: 80%;
+            margin: 20px auto;
+            border-collapse: collapse;
+        }
+
+        .score-table, .score-table th, .score-table td {
+            border: 1px solid black;
+        }
+
+        .score-table th, .score-table td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .score-table th {
+            background-color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
     <h1>3-Digit Guessing Game</h1>
-    <div id="guesses">
-        <!-- Guess rows will be generated here dynamically -->
+    <nav>
+        <a href="#" onclick="showPage('game')">Game</a> | 
+        <a href="#" onclick="showPage('topScores')">Top Scores</a>
+    </nav>
+    
+    <div id="game" class="page">
+        <div id="guesses">
+            <!-- Guess rows will be generated here dynamically -->
+        </div>
+        <div id="feedback"></div>
+        <div id="score">Score: 800</div>
+        <button id="resetButton" onclick="resetGame()">Reset Game</button>
     </div>
-    <div id="feedback"></div>
-    <div id="score">Score: 800</div>
-    <button id="resetButton" onclick="resetGame()">Reset Game</button>
-
+    
+    <div id="topScores" class="page hidden">
+        <h2>Top Scores</h2>
+        <table class="score-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Code</th>
+                    <th>Score</th>
+                </tr>
+            </thead>
+            <tbody id="scoreTableBody">
+                <!-- Top scores will be inserted here -->
+            </tbody>
+        </table>
+        <button onclick="showPage('game')">Back to Game</button>
+    </div>
+    
     <div class="keypad">
         <div class="keypad-grid">
             <button onclick="handleKeypadClick(1)">1</button>
@@ -135,8 +178,9 @@
         let currentRow = 0;
         let currentInputIndex = 0;
         const maxScore = 800;
-        const correctCode = generateRandomCode();
+        let correctCode = generateRandomCode();
         let score = maxScore;
+        let topScores = [];
 
         function startGame() {
             currentRow = 0;
@@ -200,6 +244,7 @@
 
             if (guess === correctCode || currentRow === numberOfRows) {
                 disableInput(); // Disable further input if game is over
+                recordScore(guess); // Record the score
             }
 
             updateScore(feedback);
@@ -241,6 +286,39 @@
                 score -= 100;
                 document.getElementById('score').textContent = `Score: ${score}`;
             }
+        }
+
+        function recordScore(guess) {
+            topScores.push({ code: guess, score: score });
+            topScores.sort((a, b) => b.score - a.score); // Sort descending by score
+            if (topScores.length > 5) topScores.pop(); // Keep only top 5 scores
+            saveScores();
+            updateTopScoresPage();
+        }
+
+        function saveScores() {
+            localStorage.setItem('topScores', JSON.stringify(topScores));
+        }
+
+        function loadScores() {
+            const savedScores = localStorage.getItem('topScores');
+            if (savedScores) {
+                topScores = JSON.parse(savedScores);
+            }
+        }
+
+        function updateTopScoresPage() {
+            const scoreTableBody = document.getElementById('scoreTableBody');
+            scoreTableBody.innerHTML = ''; // Clear existing scores
+            topScores.forEach((entry, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${entry.code}</td>
+                    <td>${entry.score}</td>
+                `;
+                scoreTableBody.appendChild(row);
+            });
         }
 
         function handleKeypadClick(digit) {
@@ -285,6 +363,16 @@
             window.scroll({ top: 0, behavior: 'smooth' });
         }
 
+        function showPage(pageId) {
+            document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
+            document.getElementById(pageId).classList.remove('hidden');
+            if (pageId === 'game') {
+                startGame();
+            } else if (pageId === 'topScores') {
+                updateTopScoresPage();
+            }
+        }
+
         // Keyboard event listener
         document.addEventListener('keydown', function(event) {
             if (event.key >= '0' && event.key <= '9') {
@@ -297,7 +385,8 @@
             event.preventDefault(); // Prevent any other default action
         });
 
-        // Start the game initially
+        // Load saved scores and start the game
+        loadScores();
         startGame();
     </script>
 </body>
