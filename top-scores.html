@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Scores</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #topScores {
+            font-weight: bold;
+        }
+        a {
+            display: block;
+            margin-top: 20px;
+            text-decoration: none;
+            color: blue;
+        }
+    </style>
+</head>
+<body>
+    <h1>Top 5 Scores</h1>
+    <div id="topScores"></div>
+    <a href="index.html">Back to Game</a>
+
+    <script>
+        function displayTopScores() {
+            const scores = JSON.parse(localStorage.getItem('scores')) || [];
+            scores.sort((a, b) => b.score - a.score);
+            const topScores = scores.slice(0, 5);
+
+            const topScoresDiv = document.getElementById('topScores');
+            topScoresDiv.innerHTML = `<h2>Top 5 Scores:</h2>`;
+            topScores.forEach((s, index) => {
+                topScoresDiv.innerHTML += `<p>${index + 1}: ${s.score}</p>`;
+            });
+        }
+
+        // Initialize the display of top scores when the page loads
+        displayTopScores();
+    </script>
+</body>
+</html>
