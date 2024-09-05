@@ -82,6 +82,9 @@
             margin-top: 20px;
             font-size: 18px;
         }
+        #resetButton {
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -96,6 +99,9 @@
     <div id="feedback"></div>
     <div id="score"></div>
 
+    <!-- Reset Game Button -->
+    <button id="resetButton" onclick="resetGame()">Reset Game</button>
+
     <div class="keypad">
         <div class="keypad-grid">
             <button onclick="inputDigit(1)">1</button>
@@ -109,25 +115,27 @@
             <button onclick="inputDigit(9)">9</button>
             <button onclick="backspace()">&#9003;</button>
             <button onclick="inputDigit(0)">0</button>
-            <button id="submitButton" onclick="makeGuess()">Submit</button>
+            <button id="submitButton" onclick="makeGuess()">&#10003;</button>
         </div>
     </div>
 
     <script>
-        const numberOfRows = 8;
+        const numberOfRows = 8;  // Changed number of rows to 8
         let secretCode = '';
         let attempts = 0;
         const maxAttempts = numberOfRows;
-        let score = numberOfRows*100;
+        let score = 800;  // Set max score to 800
         let currentRow = 0;
         let currentInputIndex = 0;
+        let finalGuess = '';  // To store the final guessed code
 
         function startGame() {
             secretCode = generateCode(3);
             attempts = 0;
-            score = 1000;
+            score = 800;
             currentRow = 0;
             currentInputIndex = 0;
+            finalGuess = '';
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = `Score: ${score}`;
             document.getElementById('submitButton').disabled = false;
@@ -196,22 +204,24 @@
                 return;
             }
 
+            finalGuess = guess.join('');  // Save the final guessed code
+
             attempts += 1;
             score -= 100;
 
             const feedback = getFeedback(guess.join(''), secretCode);
             document.getElementById(`row-${currentRow}-feedback`).innerHTML = feedback;
 
-            if (guess.join('') === secretCode) {
+            if (finalGuess === secretCode) {
                 document.getElementById('feedback').innerHTML = `Congratulations! You've guessed the code in ${attempts} attempts!`;
                 document.getElementById('score').innerHTML = `Final Score: ${score}`;
-                saveScore(score);
+                saveScore(score, finalGuess);
                 displayTopScores();
                 disableInput();
             } else if (attempts >= maxAttempts) {
                 document.getElementById('feedback').innerHTML = `Sorry, you've used all ${maxAttempts} attempts. The correct code was ${secretCode}.`;
                 document.getElementById('score').innerHTML = `Final Score: 0`;
-                saveScore(0);
+                saveScore(0, finalGuess);
                 displayTopScores();
                 disableInput();
             } else {
@@ -261,9 +271,9 @@
             }
         }
 
-        function saveScore(score) {
+        function saveScore(score, finalGuess) {
             const scores = JSON.parse(localStorage.getItem('scores')) || [];
-            scores.push({ score });
+            scores.push({ score, guess: finalGuess });
             localStorage.setItem('scores', JSON.stringify(scores));
         }
 
@@ -273,10 +283,13 @@
             const topScores = scores.slice(0, 5);
 
             const topScoresDiv = document.getElementById('topScores');
-            topScoresDiv.innerHTML = `<h3>Top 5 Scores:</h3>`;
-            topScores.forEach((s, index) => {
-                topScoresDiv.innerHTML += `<p>${index + 1}: ${s.score}</p>`;
-            });
+            if (topScoresDiv) {
+                topScoresDiv.innerHTML = `<h3>Top 5 Scores:</h3>`;
+                topScores.forEach((s, index) => {
+                    const guessBoxClass = s.score > 0 ? 'lightgreen' : 'lightcoral';
+                    topScoresDiv.innerHTML += `<p>${index + 1}: ${s.score} <span style="background-color: ${guessBoxClass};">${s.guess}</span></p>`;
+                });
+            }
         }
 
         function disableRow(rowIndex) {
@@ -293,7 +306,7 @@
 
         function resetGame() {
             document.getElementById('feedback').innerHTML = '';
-            document.getElementById('score').innerHTML = 'Score: 1000';
+            document.getElementById('score').innerHTML = 'Score: 800';  // Reset score to 800
             startGame();
         }
 

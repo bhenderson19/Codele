@@ -31,16 +31,19 @@
     <a href="index.html">Back to Game</a>
 
     <script>
-        function displayTopScores() {
+    function displayTopScores() {
             const scores = JSON.parse(localStorage.getItem('scores')) || [];
             scores.sort((a, b) => b.score - a.score);
             const topScores = scores.slice(0, 5);
 
             const topScoresDiv = document.getElementById('topScores');
-            topScoresDiv.innerHTML = `<h2>Top 5 Scores:</h2>`;
-            topScores.forEach((s, index) => {
-                topScoresDiv.innerHTML += `<p>${index + 1}: ${s.score}</p>`;
-            });
+            if (topScoresDiv) {
+                topScoresDiv.innerHTML = `<h3>Top 5 Scores:</h3>`;
+                topScores.forEach((s, index) => {
+                    const guessBoxClass = s.score > 0 ? 'lightgreen' : 'lightcoral';
+                    topScoresDiv.innerHTML += `<p>${index + 1}: ${s.score} <span style="background-color: ${guessBoxClass};">${s.guess}</span></p>`;
+                });
+            }
         }
 
         // Initialize the display of top scores when the page loads
