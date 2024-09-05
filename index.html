@@ -245,14 +245,15 @@
             guesses.push({ guess: guess, feedback: feedback });
             currentRow++;
 
+            updateScore(feedback);
+
             if (currentRow < numberOfRows) {
                 showCurrentRow();
             } else {
                 disableInput(); // Disable further input if game is over
-                recordScore(guess); // Record the score
+                recordScore(); // Record the score
             }
 
-            updateScore(feedback);
             displayPreviousGuesses(); // Display previous guesses
         }
 
@@ -309,8 +310,8 @@
             });
         }
 
-        function recordScore(guess) {
-            topScores.push({ code: guess, score: score });
+        function recordScore() {
+            topScores.push({ code: correctCode, score: score });
             topScores.sort((a, b) => b.score - a.score); // Sort descending by score
             if (topScores.length > 5) topScores.pop(); // Keep only top 5 scores
             saveScores();
