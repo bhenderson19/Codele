@@ -279,11 +279,23 @@
         }
 
         function resetGame() {
-            document.getElementById('feedback').innerHTML = '';
-            document.getElementById('score').innerHTML = 'Score: 800';  // Reset score to 800
+            correctCode = generateRandomCode();
             startGame();
-            window.scrollTo({ top: 0, behavior: 'smooth' });  // Ensure the page scrolls to the top after reset
+            document.getElementById('submitButton').disabled = false;
+            window.scroll({ top: 0, behavior: 'smooth' });
         }
+
+        // Keyboard event listener
+        document.addEventListener('keydown', function(event) {
+            if (event.key >= '0' && event.key <= '9') {
+                handleKeypadClick(parseInt(event.key));
+            } else if (event.key === 'Backspace') {
+                backspace();
+            } else if (event.key === 'Enter') {
+                submitGuess();
+            }
+            event.preventDefault(); // Prevent any other default action
+        });
 
         // Start the game initially
         startGame();
