@@ -364,10 +364,10 @@
             document.querySelectorAll('.page').forEach(page => page.classList.add('hidden'));
             document.getElementById(pageId).classList.remove('hidden');
             if (pageId === 'game') {
-                document.getElementById('keypad').style.display = 'flex';
+                //document.getElementById('keypad').style.display = 'flex';
                 startGame();
             } else if (pageId === 'topScores') {
-                document.getElementById('keypad').style.display = 'none';
+                //document.getElementById('keypad').style.display = 'none';
                 updateTopScoresPage();
             }
         }
