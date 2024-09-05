@@ -9,7 +9,7 @@
             font-family: Arial, sans-serif;
             text-align: center;
             margin: 0;
-            padding-bottom: 200px; /* To prevent content being covered by keypad */
+            padding-bottom: 200px;
         }
         .guess-row {
             display: flex;
@@ -29,7 +29,7 @@
             width: 50px;
             text-align: center;
             margin: 0 5px;
-            pointer-events: none; /* Prevent direct typing */
+            pointer-events: none;
         }
         input[type="number"]:disabled {
             background-color: #e0e0e0;
@@ -39,7 +39,7 @@
             font-size: 16px;
             margin-top: 20px;
         }
-        #feedback, #score, #previousGuesses, #topScores {
+        #feedback, #score {
             margin-top: 20px;
             font-weight: bold;
         }
@@ -70,23 +70,31 @@
             font-size: 24px;
         }
         .keypad-grid button:nth-child(10) {
-            grid-column: 1; /* Position the backspace button */
+            grid-column: 1;
         }
         .keypad-grid button:nth-child(12) {
-            grid-column: 3; /* Position the submit button */
+            grid-column: 3;
+        }
+        .hidden {
+            display: none;
+        }
+        .nav-link {
+            margin-top: 20px;
+            font-size: 18px;
         }
     </style>
 </head>
 <body>
     <h1>Numeric Code Breaker Game</h1>
-    
+
+    <a href="top-scores.html" class="nav-link">Top Scores</a>
+
     <div id="guesses">
         <!-- Rows for guesses will be dynamically created here -->
     </div>
 
     <div id="feedback"></div>
     <div id="score"></div>
-    <div id="topScores"></div>
 
     <div class="keypad">
         <div class="keypad-grid">
@@ -99,18 +107,18 @@
             <button onclick="inputDigit(7)">7</button>
             <button onclick="inputDigit(8)">8</button>
             <button onclick="inputDigit(9)">9</button>
-            <button onclick="backspace()">&#9003;</button> <!-- Backspace on left side -->
+            <button onclick="backspace()">&#9003;</button>
             <button onclick="inputDigit(0)">0</button>
-            <button onclick="makeGuess()">Submit</button> <!-- Submit button on right side -->
+            <button id="submitButton" onclick="makeGuess()">Submit</button>
         </div>
     </div>
 
     <script>
-        const numberOfRows = 10;
+        const numberOfRows = 8;
         let secretCode = '';
         let attempts = 0;
         const maxAttempts = numberOfRows;
-        let score = 1000; // Starting score
+        let score = numberOfRows*100;
         let currentRow = 0;
         let currentInputIndex = 0;
 
@@ -122,8 +130,8 @@
             currentInputIndex = 0;
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = `Score: ${score}`;
+            document.getElementById('submitButton').disabled = false;
             generateRows();
-            displayTopScores();
         }
 
         function generateCode(length) {
@@ -140,7 +148,7 @@
 
             for (let i = 0; i < numberOfRows; i++) {
                 const rowDiv = document.createElement('div');
-                rowDiv.className = 'guess-row';
+                rowDiv.className = 'guess-row hidden';
                 rowDiv.id = `row-${i}`;
 
                 const label = document.createElement('div');
@@ -167,11 +175,12 @@
                 guessesDiv.appendChild(rowDiv);
             }
 
-            enableCurrentRow();
+            showCurrentRow();
         }
 
-        function enableCurrentRow() {
+        function showCurrentRow() {
             const row = document.getElementById(`row-${currentRow}`);
+            row.classList.remove('hidden');
             row.querySelectorAll('input').forEach(input => input.disabled = false);
         }
 
@@ -188,7 +197,7 @@
             }
 
             attempts += 1;
-            score -= 100; // Decrease score by 100 for each attempt
+            score -= 100;
 
             const feedback = getFeedback(guess.join(''), secretCode);
             document.getElementById(`row-${currentRow}-feedback`).innerHTML = feedback;
@@ -209,7 +218,7 @@
                 disableRow(currentRow);
                 currentRow += 1;
                 currentInputIndex = 0;
-                enableCurrentRow();
+                showCurrentRow();
             }
         }
 
@@ -279,14 +288,13 @@
             for (let i = 0; i < numberOfRows; i++) {
                 disableRow(i);
             }
-            document.querySelector('button').disabled = true;
+            document.getElementById('submitButton').disabled = true;
         }
 
         function resetGame() {
             document.getElementById('feedback').innerHTML = '';
             document.getElementById('score').innerHTML = 'Score: 1000';
             startGame();
-            displayTopScores();
         }
 
         // Initialize the game when the page loads
